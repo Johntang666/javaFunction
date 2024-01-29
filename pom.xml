@@ -38,21 +38,16 @@
             <artifactId>cells</artifactId>
             <version>18.9</version>
         </dependency>
-
         <dependency>
             <groupId>com.aspose</groupId>
             <artifactId>aspose-slides</artifactId>
             <version>15.9.0</version>
         </dependency>
-
-
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
             <version>5.8.16</version>
         </dependency>
-
-
     </dependencies>
 
     <build>
