@@ -1,7 +1,14 @@
 package com.tang.javafunction;
 
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
+
+import java.time.ZoneId;
 import java.util.Arrays;
+import java.util.IntSummaryStatistics;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author tangzhipeng
@@ -11,7 +18,50 @@ import java.util.List;
  */
 public class JavaAPITest {
     public static void main(String[] args) {
-        testArrayAndListOf();
+        testHutool();
+    }
+
+    /**
+     * 测试hutool工具类
+     */
+    public static void testHutool() {
+        DateTime date = DateUtil.date(System.currentTimeMillis());
+        ZoneId zoneId = date.getZoneId();
+        //时区
+        System.out.println(zoneId);
+        //日期转成年月日字符串
+        System.out.println(date.toDateStr());
+    }
+
+    /**
+     * 测试流的使用
+     */
+    public static void testStream() {
+        //Stream的类加载器是启动类加载器
+        Stream<Object> empty = Stream.empty();
+        System.out.println(empty.getClass().getClassLoader());
+        //Supplier接口的应用，generate生成一个无限流，和limit搭配使用就可以生成指定个数的数据
+        /*Stream<Integer> generate = Stream.generate(() -> 1);
+        generate.forEach(System.out::println);*/
+
+        // 生成斐波那契数列的前10个元素
+        /*Stream.iterate(new int[]{0, 1}, fib -> new int[]{fib[1], fib[0] + fib[1]})
+                .limit(10)
+                .forEach(fibonacci -> System.out.print(fibonacci[0] + " "));
+        List<String> strings = Arrays.asList("apple", "banana", "orange");*/
+
+        /*List<String> result = strings.stream()
+                .filter(s -> s.length() > 5)
+                .peek(s -> System.out.println("Filtered value: " + s))
+                .map(String::toUpperCase)
+                .peek(s -> System.out.println("Mapped value: " + s))
+                .collect(Collectors.toList());
+        result.stream().forEach(System.out::println);*/
+        //测试流的总和
+        List<String> apple = List.of("apple", "banana", "peach");
+        IntSummaryStatistics collect = apple.stream().collect(Collectors.summarizingInt(String::length));
+        System.out.println(collect.getAverage());
+
     }
 
     /**
