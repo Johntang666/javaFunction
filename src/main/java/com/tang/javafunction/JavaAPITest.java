@@ -1,6 +1,7 @@
 package com.tang.javafunction;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import com.tang.javafunction.model.Department;
@@ -18,23 +19,101 @@ import java.util.stream.Stream;
  * @date 2024/1/30 16:03
  */
 public class JavaAPITest {
+    static List<Department> departments = Arrays.asList(new Department("1", "研发部门", null),
+            new Department("2", "文档部门", null),
+            new Department("3", "产品部门", null),
+            new Department("4", "研发子部门1", "1"),
+            new Department("5", "研发子部门2", "1"),
+            new Department("6", "研发子部门3", "1"),
+            new Department("7", "文档子部门", "2"),
+            new Department("8", "研发子部门1的子部门", "4"));
+    static List<DepartmentVO> departmentVOS = BeanUtil.copyToList(departments, DepartmentVO.class);
+
     public static void main(String[] args) {
-        testTree();
+//        testTreeMultiLevelQuery("8");
+        /*List<String> list = testTreeMultiLevelQuery("4");
+        list.forEach(System.out::println);*/
+        testTreeVagueQuery("部门1的子部门");
+    }
+
+    /**
+     * 测试树的模糊查询
+     */
+    public static void testTreeVagueQuery(String departmentName) {
+        List<DepartmentVO> departmentVOS1 = testTreeByStack();
+        filterWord(departmentVOS1, departmentName);
+        departmentVOS1.forEach(System.out::println);
+    }
+
+    private static void filterWord(List<DepartmentVO> departmentVOS1, String departmentName) {
+        Iterator<DepartmentVO> iterator = departmentVOS1.iterator();
+        while (iterator.hasNext()) {
+            DepartmentVO next = iterator.next();
+            //没有匹配上就一直向下寻找
+            if (!next.getDepartmentName().contains(departmentName)) {
+                List<DepartmentVO> departments1 = next.getDepartments();
+                if (CollUtil.isNotEmpty(departments1)) {
+                    filterWord(departments1, departmentName);
+                }
+                if (CollUtil.isEmpty(departments1)) {
+                    iterator.remove();
+                } else {
+                    List<DepartmentVO> departments2 = next.getDepartments();
+                    if (CollUtil.isNotEmpty(departments2)) {
+                        filterWord(departments2, departmentName);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 测试树的多级查询
+     *
+     * @param departmentId
+     */
+    public static List<String> testTreeMultiLevelQuery(String departmentId) {
+        List<String> strings = new ArrayList<>();
+        strings.add(departmentId);
+        Stack<DepartmentVO> departmentVOS1 = new Stack<>();
+        departmentVOS.stream().filter(i -> Objects.equals(i.getParentDepartmentId(), departmentId)).forEach(departmentVOS1::push);
+        while (!departmentVOS1.isEmpty()) {
+            DepartmentVO pop = departmentVOS1.pop();
+            if (pop.getDepartmentId().equals(departmentId)) {
+                continue;
+            }
+            //查询分类下的子分类
+            List<DepartmentVO> collect = departmentVOS.stream().filter(i -> Objects.equals(i.getParentDepartmentId(), pop.getDepartmentId())).collect(Collectors.toList());
+            departmentVOS1.addAll(collect);
+            strings.add(pop.getDepartmentId());
+        }
+        return strings;
+    }
+
+    /**
+     * 栈测试树的构建
+     */
+    public static List<DepartmentVO> testTreeByStack() {
+        List<DepartmentVO> collect = departmentVOS.stream().filter(i -> null == i.getParentDepartmentId()).collect(Collectors.toList());
+        Stack<DepartmentVO> stack = new Stack<>();
+        for (DepartmentVO i : collect) {
+            stack.push(i);
+        }
+        while (!stack.isEmpty()) {
+            DepartmentVO pop = stack.pop();
+            List<DepartmentVO> collect1 = departmentVOS.stream().filter(i -> Objects.equals(i.getParentDepartmentId(), pop.getDepartmentId())).collect(Collectors.toList());
+            pop.setDepartments(collect1);
+            for (DepartmentVO i : collect1) {
+                stack.push(i);
+            }
+        }
+        return collect;
     }
 
     /**
      * 测试树的使用和查询
      */
     public static void testTree() {
-        List<Department> departments = Arrays.asList(new Department("1", "研发部门", null),
-                new Department("2", "文档部门", null),
-                new Department("3", "产品部门", null),
-                new Department("4", "研发子部门1", "1"),
-                new Department("5", "研发子部门2", "1"),
-                new Department("6", "研发子部门3", "1"),
-                new Department("7", "文档子部门", "2"),
-                new Department("8", "研发子部门1的子部门", "4"));
-        List<DepartmentVO> departmentVOS = BeanUtil.copyToList(departments, DepartmentVO.class);
         List<DepartmentVO> collect = departmentVOS.stream().filter(i -> null == i.getParentDepartmentId()).collect(Collectors.toList());
         for (DepartmentVO i : collect) {
             i.setDepartments(buildChildTree(departmentVOS, i.getDepartmentId()));
