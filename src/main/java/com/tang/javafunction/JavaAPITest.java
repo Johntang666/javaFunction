@@ -1,12 +1,13 @@
 package com.tang.javafunction;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
+import com.tang.javafunction.model.Department;
+import com.tang.javafunction.model.DepartmentVO;
 
 import java.time.ZoneId;
-import java.util.Arrays;
-import java.util.IntSummaryStatistics;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -18,7 +19,38 @@ import java.util.stream.Stream;
  */
 public class JavaAPITest {
     public static void main(String[] args) {
-        testHutool();
+        testTree();
+    }
+
+    /**
+     * 测试树的使用和查询
+     */
+    public static void testTree() {
+        List<Department> departments = Arrays.asList(new Department("1", "研发部门", null),
+                new Department("2", "文档部门", null),
+                new Department("3", "产品部门", null),
+                new Department("4", "研发子部门1", "1"),
+                new Department("5", "研发子部门2", "1"),
+                new Department("6", "研发子部门3", "1"),
+                new Department("7", "文档子部门", "2"),
+                new Department("8", "研发子部门1的子部门", "4"));
+        List<DepartmentVO> departmentVOS = BeanUtil.copyToList(departments, DepartmentVO.class);
+        List<DepartmentVO> collect = departmentVOS.stream().filter(i -> null == i.getParentDepartmentId()).collect(Collectors.toList());
+        for (DepartmentVO i : collect) {
+            i.setDepartments(buildChildTree(departmentVOS, i.getDepartmentId()));
+        }
+        collect.forEach(System.out::println);
+    }
+
+    private static List<DepartmentVO> buildChildTree(List<DepartmentVO> departmentVOS, String departmentId) {
+        List<DepartmentVO> departmentVOS1 = new ArrayList<>(32);
+        for (DepartmentVO i : departmentVOS) {
+            if (Objects.equals(i.getParentDepartmentId(), departmentId)) {
+                i.setDepartments(buildChildTree(departmentVOS, i.getDepartmentId()));
+                departmentVOS1.add(i);
+            }
+        }
+        return departmentVOS1;
     }
 
     /**
